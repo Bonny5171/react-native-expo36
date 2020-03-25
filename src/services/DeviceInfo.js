@@ -1,6 +1,6 @@
 import { Platform, AsyncStorage } from 'react-native';
 import Fingerprint2 from 'fingerprintjs2';
-import { Constants } from 'expo';
+import Constants from 'expo-constants';
 import { services as config } from '../../config';
 import { getToken, getClientInfo } from './Auth';
 import pkg from '../../package.json'
@@ -106,19 +106,25 @@ class DeviceInfo {
   }
 
   static async registerDevice() {
+    debugger
     const cfg = config.find(srv => srv.nome === 'setup');
     const { host, version, path } = cfg;
-
+    debugger
     Constants.clientInfo = await getClientInfo();
+    debugger
     const opts = {
       platform_device_id: await this.getPlatformDeviceId(),
       platform_type: Constants.platformType,
       platform_version: Constants.platformVersion,
       platform_properties: Constants
     };
+    debugger
+    const URL = `${host}${version}${path.devices}?&nocache=${new Date().getTime()}`;
+    console.log('registrando DEVICE na URL', URL);
+    debugger
 
     // Realiza o post de registro.
-    const response = await fetch(`${host}${version}${path.devices}?&nocache=${new Date().getTime()}`, {
+    const response = await fetch(URL, {
       method: 'POST',
       headers: new Headers({
         Authorization: 'Bearer ' + (await getToken()),

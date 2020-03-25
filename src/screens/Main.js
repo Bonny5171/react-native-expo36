@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { connect } from 'react-redux';
 import { NavigationActions } from 'react-navigation';
-import { WebBrowser, Constants } from 'expo';
+import { WebBrowser } from 'expo';
 import { decode } from 'base-64';
 import { acSetUserInfo, acSetToast, acSetAppName } from '../redux/actions/global';
 import { auth, orgId } from '../../config';
@@ -22,6 +22,8 @@ import Button from '../components/Button';
 import LoadIndicator from '../components/LoadIndicator/LoadIndicator';
 import global from '../assets/styles/global';
 import { ToastStyles } from '../components/Toaster';
+import { WebView } from 'react-native-webview';
+import Constants from 'expo-constants';
 
 class MainScreen extends React.PureComponent {
   constructor(props) {
@@ -45,6 +47,7 @@ class MainScreen extends React.PureComponent {
       currentComunidade: {
         name: '',
       },
+      webViewLogin: false
     };
   }
 
@@ -96,6 +99,29 @@ class MainScreen extends React.PureComponent {
       alignItems: 'center',
       alignContent: 'center',
     };
+    
+    if (this.state.webViewLogin) {
+      return (
+        <WebView
+          useWebKit
+          source={{ uri: 'http://auth-dev-dot-crmgrendene.appspot.com/login?domain=grendene--crm00' }}
+          originWhitelist={['*']}
+          style={{ marginTop: 20 }}
+          onMessage={event => {
+            const result = event.nativeEvent.data;
+
+            // alert(result)
+            this.save(result);
+            // this.props.acToggleFlag('isAuthenticated');
+            // this.props.navigation.navigate('load');
+          }}
+          javaScriptEnabled
+          javaScriptEnabledAndroid
+          domStorageEnabled
+        />
+      );
+    }
+
     if (this.state.appId) {
       return this._renderSecondPage();
     }
@@ -124,7 +150,16 @@ class MainScreen extends React.PureComponent {
                 <Text style={[global.h4, { marginTop: 60 }]}>Seja bem-vindo ao aplicativo de vendas da Grendene!</Text>
                 <Text style={[global.h4, { marginTop: 30 }]}>Defina abaixo em qual divisão você quer atuar:</Text>
                 <View style={{ flex: 1, flexDirection: 'row' }}>
-                  {this._renderApps()}
+                  {/* {this._renderApps()} */}
+                  <TouchableOpacity onPress={() => {
+                    if (Platform.OS === 'web') {
+                      window.location.href = 'http://auth-dev-dot-crmgrendene.appspot.com/login?domain=grendene--crm00';
+                    } else {
+                      this.setState({ webViewLogin: true })
+                    }
+                  }}>
+                    <Text>Logar</Text>
+                  </TouchableOpacity>
                 </View>
               </LoadIndicator>              
             )
@@ -268,7 +303,8 @@ class MainScreen extends React.PureComponent {
     const promises = [];
     try {
       let promise = {};
-      const objectRes = decode(result.url.split('?')[1].substr(2, result.length));
+      // const objectRes = decode(result.url.split('?')[1].substr(2, result.length));
+      const objectRes = decode(result);
       console.log('RESULT recebido e decodado: ', objectRes);
 
       promise = AsyncStorage.setItem('clientInfo', objectRes);

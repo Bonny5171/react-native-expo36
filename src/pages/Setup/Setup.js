@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, View, Text, ImageBackground, AsyncStorage, Image } from 'react-native';
-import { FileSystem } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import { connect } from 'react-redux';
 import { NavigationActions } from 'react-navigation';
 import { backgroundVendor, backgroundAdmin } from '../../assets/images';

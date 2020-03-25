@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
-import { FileSystem } from 'expo-file-system';
-import { SQLite } from 'expo-sqlite';
+import * as FileSystem from 'expo-file-system';
+import * as SQLite from 'expo-sqlite';
 import uuidv4 from 'uuid/v4';
 import squel from '../squelConfig';
 import { log } from '../../../../config';

@@ -1,4 +1,4 @@
-import { FileSystem } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 import { services, orgId, } from '../../../config';
 import { getToken, isDbLocal, getUserId, } from '../Auth';

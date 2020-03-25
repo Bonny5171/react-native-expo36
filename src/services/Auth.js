@@ -1,5 +1,5 @@
 import { Platform, AsyncStorage } from 'react-native';
-import { FileSystem } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import { services as config } from '../../config';
 import deviceInfo from './DeviceInfo';
 
@@ -103,34 +103,37 @@ const getClientInfo = async () => {
 };
 
 const isAllDbsLocal = async (deviceId) => {
-
-    if (Platform.OS === 'web') {
-        if (!window.webSqlManager) return false;
-
-        const isDbAccount   = window.webSqlManager.exists('sfa-account', 'userId');
-        const isDbProduct   = window.webSqlManager.exists('sfa-product', 'userId');
-        const isDbSetup     = window.webSqlManager.exists('sfa-setup', 'userId');
-        const isDbOrder     = window.webSqlManager.exists('sfa-order', 'userId');
-        const isDbResource  = window.webSqlManager.exists('sfa-resource', 'userId');
-
-        return isDbAccount
-            && isDbResource
-            && isDbProduct
-            && isDbOrder
-            && isDbSetup;
+    try {
+        if (Platform.OS === 'web') {
+            if (!window.webSqlManager) return false;
+    
+            const isDbAccount   = window.webSqlManager.exists('sfa-account', 'userId');
+            const isDbProduct   = window.webSqlManager.exists('sfa-product', 'userId');
+            const isDbSetup     = window.webSqlManager.exists('sfa-setup', 'userId');
+            const isDbOrder     = window.webSqlManager.exists('sfa-order', 'userId');
+            const isDbResource  = window.webSqlManager.exists('sfa-resource', 'userId');
+    
+            return isDbAccount
+                && isDbResource
+                && isDbProduct
+                && isDbOrder
+                && isDbSetup;
+        }
+    
+        const isDbAccount   = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-account.db`);
+        const isDbProduct   = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-product.db`);
+        const isDbSetup     = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-setup.db`);
+        const isDbOrder     = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-order.db`);
+        const isDbResource  = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-resource.db`);
+    
+        return isDbAccount.exists
+            && isDbProduct.exists
+            && isDbSetup.exists
+            && isDbOrder.exists
+            && isDbResource.exists;   
+    } catch (error) {
+        console.log('ERRO :: ', error)
     }
-
-    const isDbAccount   = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-account.db`);
-    const isDbProduct   = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-product.db`);
-    const isDbSetup     = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-setup.db`);
-    const isDbOrder     = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-order.db`);
-    const isDbResource  = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/${deviceId}_sfa-resource.db`);
-
-    return isDbAccount.exists
-        && isDbProduct.exists
-        && isDbSetup.exists
-        && isDbOrder.exists
-        && isDbResource.exists;
 };
 
 const isDbLocal = async (db, deviceId) => {

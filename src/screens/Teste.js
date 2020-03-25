@@ -125,15 +125,6 @@ class TesteScreen extends React.Component {
   //   _ddInstance[repo].run();
   // }
 
-  // _setDeviceId = async () => {
-  //   const device = await deviceInfo.registerDevice();
-
-  //   await Account.saveParameter('CURRENT_DEVICE_ID', device.id);
-  //   await Resource.saveParameter('CURRENT_DEVICE_ID', device.id);
-  //   await Product.saveParameter('CURRENT_DEVICE_ID', device.id);
-  //   await Setup.saveParameter('CURRENT_DEVICE_ID', device.id);
-  // }
-
   // _setUserId = async () => {
   //   const userId = await getUserId();
 
