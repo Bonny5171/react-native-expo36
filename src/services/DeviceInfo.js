@@ -4,6 +4,8 @@ import Constants from 'expo-constants';
 import { services as config } from '../../config';
 import { getToken, getClientInfo } from './Auth';
 import pkg from '../../package.json'
+import uuidv4 from 'uuid/v4';
+import Axios from 'axios';
 
 const optionsWeb = {
   excludes: {
@@ -108,45 +110,105 @@ class DeviceInfo {
   static async registerDevice() {
     debugger
     const cfg = config.find(srv => srv.nome === 'setup');
-    const { host, version, path } = cfg;
-    debugger
+    const { apiUrl } = cfg;
+
+    const installation_id = await AsyncStorage.getItem('deviceInfo');
     Constants.clientInfo = await getClientInfo();
-    debugger
-    const opts = {
-      platform_device_id: await this.getPlatformDeviceId(),
-      platform_type: Constants.platformType,
-      platform_version: Constants.platformVersion,
-      platform_properties: Constants
-    };
-    debugger
-    const URL = `${host}${version}${path.devices}?&nocache=${new Date().getTime()}`;
-    console.log('registrando DEVICE na URL', URL);
-    debugger
 
+    // const url = `${apiUrl}/rpc/device`;
+    const url = 'https://api-dev-dot-crmgrendene.appspot.com/setup/rpc/device'
+    // const url = '';
     // Realiza o post de registro.
-    const response = await fetch(URL, {
-      method: 'POST',
-      headers: new Headers({
-        Authorization: 'Bearer ' + (await getToken()),
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        Pragma: 'no-cache',
-        Expires: 0
-      }),
-      body: JSON.stringify(opts)
-    });
+    console.log('POST: registra o device:', `${url}`);
+    debugger
+    try {
+      debugger
+      const payload = {
+        id: (installation_id === null ? uuidv4() : installation_id),
+        platform_device_id: await this.getPlatformDeviceId(),
+        platform_type: Constants.platformType ? Constants.platformType : Platform.OS,
+        platform_version: Constants.platformVersion ? Constants.platformVersion : Constants.systemVersion,
+        platform_properties: { ...Constants }
+      };
+      debugger
+      if (payload.platform_properties.systemFonts) {
+        delete payload.platform_properties.systemFonts;
+      }
+      debugger
+      /* Sentry.io >>> begin */
+      if (!__DEV__) {
+        // Sentry.setTags({
+        //   installationId: payload.id
+        // });
+        // console.log('configuring Sentry.io tags...');
 
-    if (response.ok) {
-      const json = await response.json();
-      await AsyncStorage.setItem('deviceInfo', json.id);
+        // Sentry.setExtras(payload);
+        // console.log('configuring Sentry.io extras...');
+        // //Sentry.captureException(new Error('Oops metadata!'));
 
-      console.log(`Device register successful! [device_id: ${json.id}] ${response.statusText}`);
-      return json.id;
+        const bugsnagClient = bugsnag();
+        bugsnagClient.metaData = {
+          platform: {
+            installationId: payload.id,
+            properties: payload
+          }
+        };
+
+        console.log('configuring bugsnag metadata...');
+        // bugsnagClient.notify(new Error('Test error metadata'));
+        /* Sentry.io >>> end */
+      }
+
+
+      debugger
+      const TT = await getToken();
+      console.log('TOKEN', TT);
+      // console.log((await getToken()));
+
+      debugger
+      const response = await Axios.post(url, payload, {
+        headers: {
+          'Authorization': 'Bearer ' + (await getToken()),
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': 0
+        }
+      });
+      debugger
+      if (response.status === 200) {
+        console.log(`Device register successful! [device_id: ${response.data.id}] ${response.status}`);
+
+        if (installation_id === null) {
+          await AsyncStorage.setItem('deviceInfo', response.data.id);
+          await AsyncStorage.setItem('devicePlatform', JSON.stringify({
+            installation_id: response.data.id,
+            platform_device_id: Constants.deviceId,
+            platform: Constants.platformForUser
+          }));
+
+          return {
+            registered: true,
+            register: response.data.id,
+            message: 'Device register successful!'
+          };
+        }
+      }
+
+      return {
+        registered: false,
+        message: `Erro ao registrar device: ${response.status}`
+      };
+    } catch (e) {
+      debugger
+      console.log(e);
+      console.log(`Fetch device info error: [${e.status}] ${e.status}`);
+
+      return {
+        registered: false,
+        message: `Erro ao registrar device: ${e.status}`
+      };
     }
-
-    console.error(`Fetch device info error: [${response.status}] ${response.statusText}`);
-    return false;
   }
 
   static async isOnline() {

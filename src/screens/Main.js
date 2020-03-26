@@ -113,7 +113,7 @@ class MainScreen extends React.PureComponent {
             // alert(result)
             this.save(result);
             // this.props.acToggleFlag('isAuthenticated');
-            // this.props.navigation.navigate('load');
+            this.props.navigation.navigate('def');
           }}
           javaScriptEnabled
           javaScriptEnabledAndroid

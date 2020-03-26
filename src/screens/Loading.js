@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 import { NavigationActions } from 'react-navigation';
 import { getInitialRouteName, getLocalStorage } from '../services/Auth';
 import { acUpdateContext, acSetAppName,  } from '../redux/actions/global';
+import DeviceInfo from '../services/DeviceInfo';
+
 class Loading extends React.Component {
   state = {
     feedback: '',
@@ -14,8 +16,33 @@ class Loading extends React.Component {
     const app = await getLocalStorage('appDevName');
     this.props.acSetAppName(app);
     try {
+
+      // DEFINE ROTA INICIAL
       const initialRouteName = await getInitialRouteName();
       console.log('ROTA INCIAL', initialRouteName);
+
+      // UNICO PONTO DE REGISTRO DO DEVICE
+      let deviceId = await DeviceInfo.getDeviceId();
+      if (deviceId === null && (initialRouteName === 'app' || initialRouteName === 'setup')) {
+        // VERIFICA SE TEM INTERNET
+        if (await DeviceInfo.isOnline() === false) {
+          // this.props.acCallAlertGlobal('error', null, 'Sem conexão com a internet');
+          // this.setState({ loading: false });
+          alert('Sem conexão com a internet');
+          return false;
+        }
+
+        // REGISTRA DEVICE
+        const register = await DeviceInfo.registerDevice();
+        if (!register.registered) {
+          // this.props.acCallAlertGlobal('error', null, register.message);
+          // this.setState({ loading: false });
+          alert(register.message);
+          return false;
+        }
+      }
+
+      
 
       const resetAction = NavigationActions.reset({
         index: 0,

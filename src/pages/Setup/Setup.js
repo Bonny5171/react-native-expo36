@@ -23,7 +23,6 @@ class Setup extends React.Component {
   async componentDidMount() {
     let deviceId, userId, appId;
     deviceId = await deviceInfo.getDeviceId();
-    deviceId = deviceId || await deviceInfo.registerDevice();
     userId = await getUserId();
     appId = await getAppId();
 
